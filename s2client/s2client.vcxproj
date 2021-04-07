@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <ProjectGuid>{8F26D718-25A7-43D8-B72E-BF84B828ED3B}</ProjectGuid>
+    <RootNamespace>s2client</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)glew-2.1.0\lib\$(Configuration)\$(PlatformName)\;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)glew-2.1.0\lib\$(Configuration)\$(PlatformName)\;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)glew-2.1.0\lib\$(Configuration)\$(PlatformName)\;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)glew-2.1.0\lib\$(Configuration)\$(PlatformName)\;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_ITERATOR_DEBUG_LEVEL=0;GLEW_STATIC;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_ITERATOR_DEBUG_LEVEL=0;GLEW_STATIC;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_ITERATOR_DEBUG_LEVEL=0;GLEW_STATIC;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <SupportJustMyCode>true</SupportJustMyCode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_ITERATOR_DEBUG_LEVEL=0;GLEW_STATIC;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <SupportJustMyCode>true</SupportJustMyCode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="core\ai\neuralnet.cpp" />
+    <ClCompile Include="core\io\bytestream.cpp" />
+    <ClCompile Include="core\io\filestream.cpp" />
+    <ClCompile Include="core\io\logger.cpp" />
+    <ClCompile Include="core\ogl\glrenderer.cpp" />
+    <ClCompile Include="core\ogl\shaders.cpp" />
+    <ClCompile Include="core\win\window.cpp" />
+    <ClCompile Include="ext\miniz\miniz.c" />
+    <ClCompile Include="ext\tinyxml2\tinyxml2.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="network\httpclient.cpp" />
+    <ClCompile Include="network\network.cpp" />
+    <ClCompile Include="network\packet.cpp" />
+    <ClCompile Include="network\tcpclient.cpp" />
+    <ClCompile Include="network\udpclient.cpp" />
+    <ClCompile Include="s2\aicontroller.cpp" />
+    <ClCompile Include="s2\entity.cpp" />
+    <ClCompile Include="s2\game.cpp" />
+    <ClCompile Include="s2\masterserver.cpp" />
+    <ClCompile Include="s2\model.cpp" />
+    <ClCompile Include="s2\navmesh2d.cpp" />
+    <ClCompile Include="s2\netmsg.cpp" />
+    <ClCompile Include="s2\replay.cpp" />
+    <ClCompile Include="s2\resourcemanager.cpp" />
+    <ClCompile Include="s2\snapshot.cpp" />
+    <ClCompile Include="s2\typeregistry.cpp" />
+    <ClCompile Include="s2\userclient.cpp" />
+    <ClCompile Include="s2\netclient.cpp" />
+    <ClCompile Include="s2\world.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="core\ai\mdp.hpp" />
+    <ClInclude Include="core\ai\neuralnet.hpp" />
+    <ClInclude Include="core\io\bytestream.hpp" />
+    <ClInclude Include="core\io\filestream.hpp" />
+    <ClInclude Include="core\io\logger.hpp" />
+    <ClInclude Include="core\io\zipfile.hpp" />
+    <ClInclude Include="core\math\geom.hpp" />
+    <ClInclude Include="core\math\interp.hpp" />
+    <ClInclude Include="core\math\mat4.hpp" />
+    <ClInclude Include="core\math\matrix.hpp" />
+    <ClInclude Include="core\math\vector3.hpp" />
+    <ClInclude Include="core\math\vectorN.hpp" />
+    <ClInclude Include="core\ogl\glrenderer.hpp" />
+    <ClInclude Include="core\ogl\gltex2d.hpp" />
+    <ClInclude Include="core\ogl\shaders.hpp" />
+    <ClInclude Include="core\prerequisites.hpp" />
+    <ClInclude Include="core\utils\bitvector.hpp" />
+    <ClInclude Include="core\utils\bresenham.hpp" />
+    <ClInclude Include="core\utils\color.hpp" />
+    <ClInclude Include="core\utils\fnv.hpp" />
+    <ClInclude Include="core\utils\format.hpp" />
+    <ClInclude Include="core\utils\input.hpp" />
+    <ClInclude Include="core\utils\quadtree.hpp" />
+    <ClInclude Include="core\win\window.hpp" />
+    <ClInclude Include="ext\glew\eglew.h" />
+    <ClInclude Include="ext\glew\glew.h" />
+    <ClInclude Include="ext\glew\glxew.h" />
+    <ClInclude Include="ext\glew\wglew.h" />
+    <ClInclude Include="ext\miniz\miniz.h" />
+    <ClInclude Include="core\utils\random.hpp" />
+    <ClInclude Include="ext\stb\stb_image.h" />
+    <ClInclude Include="ext\tinyxml2\tinyxml2.h" />
+    <ClInclude Include="network\httpclient.hpp" />
+    <ClInclude Include="network\network.hpp" />
+    <ClInclude Include="network\packet.hpp" />
+    <ClInclude Include="network\tcpclient.hpp" />
+    <ClInclude Include="network\udpclient.hpp" />
+    <ClInclude Include="s2\aicontroller.h" />
+    <ClInclude Include="s2\consts.hpp" />
+    <ClInclude Include="s2\entity.hpp" />
+    <ClInclude Include="s2\game.hpp" />
+    <ClInclude Include="s2\masterserver.hpp" />
+    <ClInclude Include="s2\model.hpp" />
+    <ClInclude Include="s2\navmesh2d.hpp" />
+    <ClInclude Include="s2\netids.hpp" />
+    <ClInclude Include="s2\replay.hpp" />
+    <ClInclude Include="s2\resourcemanager.hpp" />
+    <ClInclude Include="s2\snapshot.hpp" />
+    <ClInclude Include="s2\typeregistry.hpp" />
+    <ClInclude Include="s2\userclient.hpp" />
+    <ClInclude Include="s2\netmsg.hpp" />
+    <ClInclude Include="s2\netclient.hpp" />
+    <ClInclude Include="s2\world.hpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
