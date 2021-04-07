@@ -1,0 +1,6 @@
+ignore/
+s2client/x64/
+s2client/maps/
+s2client/Debug/
+x64/
+build/
