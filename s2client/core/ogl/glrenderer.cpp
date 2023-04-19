@@ -102,6 +102,11 @@ namespace core {
         mTexProgram->use(); mTexProgram->set("matProject", mViewProjection);
         mDefaultProgram->use(); mDefaultProgram->set("matProject", mViewProjection);
     }
+
+    static void APIENTRY ogl_debug_proc(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
+        core::error("source %Xh type %Xh id %Xh severity %Xh length %Xh message %s\n", source, type, id, severity, length, message);
+    }
+
     glrenderer::glrenderer(const window& target) : mWnd(target) {
         mDC = GetDC(mWnd.handle());
         initpixelformat();
@@ -109,6 +114,11 @@ namespace core {
         wglMakeCurrent(mDC, mCtx);
         auto err = glewInit();
         assert(err == GLEW_OK);
+
+        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+        glDebugMessageCallback(ogl_debug_proc, nullptr);
+
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         initshaders();

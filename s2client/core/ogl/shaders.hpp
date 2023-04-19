@@ -67,7 +67,7 @@ namespace core {
             } else {
                 glBufferSubData(GL_ARRAY_BUFFER, 0, size, buf);
             }
-            glVertexAttribPointer(attrib, 3, GL_FALSE, GL_FALSE, 0, (void*)0);
+            glVertexAttribPointer(attrib, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 			glEnableVertexAttribArray(attrib);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 			unbind();
