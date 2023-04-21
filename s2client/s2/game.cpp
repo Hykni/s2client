@@ -58,11 +58,13 @@ namespace s2 {
 	}
 	bool game::readentupdate(packet& pkt) {
 		uint16_t head = pkt.readword();
-		bool hasEntType = head & 1;
+		bool entFromBaseline = head & 1;
 		auto entid = head >> 1;
 		uint16_t entType = 0;
-		if (hasEntType) {
+		if (entFromBaseline) {
 			entType = pkt.readword();
+			//if (entType)
+			//	pkt.readdword(); //?
 			if (entType) {
 				if (!typeregistry::HasType(entType)) {
 					core::warning("Unknown entity type %Xh in snapshot\n", entType);
@@ -73,8 +75,15 @@ namespace s2 {
 					newentity(entid, entType);
 			}
 			else {
+                auto it = mEntities.find(entid);
 				core::warning("Entity type was specified as zero for entity #%d.\n", entid);
-				return false;
+                // this means entity is dead, remove it...
+                if (it != mEntities.end()) {
+                    core::info("Deleting entity %d\n", entid);
+                    mEntities.erase(it);
+                }
+                return true;
+				//return false;
 			}
 		}
 		else {

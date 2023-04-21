@@ -53,6 +53,7 @@ namespace s2 {
 			Connecting,
 			LoadingWorld,
 			Ready,
+            WaitingFirstFrame,
 			Spectating,
 			Spawning,
 			Playing

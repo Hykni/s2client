@@ -156,6 +156,10 @@ namespace s2 {
 			return;
 		mLastThinkFrame = mCurrentFrame;
 		switch (mState) {
+        case WaitingFirstFrame:
+        {
+
+        } break;
 		case Spectating:
 		{
 			if (ingame() && clientinfo()) {
@@ -388,8 +392,8 @@ namespace s2 {
 	}
 
 	void userclient::sendclientjoin() {
-		mIngame = true;
-		mState = Spectating;
+		//mIngame = true;
+		mState = WaitingFirstFrame;
 		core::info("Sending client join.\n");
 		mNet->sendreliable(ClientCmd::Join);
 	}
@@ -477,6 +481,10 @@ namespace s2 {
 	}
 
 	bool userclient::processserversnapshot(packet& pkt, size_t length) {
+        if (mState == WaitingFirstFrame) {
+            mIngame = true;
+            mState = Spectating;
+        }
 		mRecvdSnapshots++;
 		auto hdr = mGame.rcvserversnapshot(pkt, length);
 		mCurrentFrame = hdr.frameId;

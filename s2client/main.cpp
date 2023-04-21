@@ -45,9 +45,11 @@ void UIThread(s2::userclient* client) {
             if (client->ingame()) {
                 auto world = client->currentworld();
                 if (world && 0 != world->name().compare(knownworld)) {
-                    worldToScreen = mat4f::scale(wnd.width() / world->worldsize(), wnd.height() / world->worldsize(), 0.f);
+                    if (!knownworld.empty())
+                        heightmaptex.reset();
+                    worldToScreen = mat4f::scale(heightmaptex.width / world->worldsize(), heightmaptex.height / world->worldsize(), 0.f);
                     core::info("Processing world %s\n", world->name());
-                    float* pixelData = new float[4 * size_t(wnd.width()) * wnd.height()];
+                    float* pixelData = new float[4 * size_t(heightmaptex.width) * heightmaptex.height];
                     const std::pair<float, core::color> heightclrs[] = {
                         {-32768.0f, core::color(25,  42,  86)},
                         {-5000.0f,  core::color(39,  60,  117)},
@@ -77,11 +79,11 @@ void UIThread(s2::userclient* client) {
                         return col;
                     };
                     float worldsize = world->worldsize();
-                    for (int y = 0; y < wnd.height(); y++) {
-                        for (int x = 0; x < wnd.width(); x++) {
-                            auto clr = (core::color*) & pixelData[4 * (y * wnd.width() + x)];
-                            float worldx = (float(x) * worldsize) / wnd.width();
-                            float worldy = (float(wnd.height() - y) * worldsize) / wnd.height();
+                    for (int y = 0; y < heightmaptex.height; y++) {
+                        for (int x = 0; x < heightmaptex.width; x++) {
+                            auto clr = (core::color*) & pixelData[4 * (y * heightmaptex.width + x)];
+                            float worldx = (float(x) * worldsize) / heightmaptex.width;
+                            float worldy = (float(heightmaptex.height - y) * worldsize) / heightmaptex.height;
                             bool blocked = world->isblocked(worldx, worldy);
                             if (blocked) {
                                 *clr = Color::Black;
@@ -339,10 +341,10 @@ int main(int argc, char** argv) {
     auto masterserver = s2::masterserver();
 
     // geometry tests
-    if (true) {
+    if (false) {
         vector3f LA(3.f, 3.f, -5.f);
         vector3f LB(3.f, 3.f, 5.f);
-        vector3f PlaneNormal(1.f, 0.f, 0.f);
+        vector3f PlaneNormal(0.f, 0.f, 1.f);
         vector3f PlanePt(0.8f, 0.5f, 0.5f);
         float tintersect;
         bool bIntersects = math::LineIntersectsPlane(LA, LB, PlaneNormal, PlanePt, &tintersect);
