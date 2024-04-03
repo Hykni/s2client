@@ -6,26 +6,55 @@
 #include <iostream>
 
 namespace core {
-	enum console_color {
-		CON_DEF = 7,
-		CON_BLU = 9,
-		CON_GRN = 10,
-		CON_CYN = 11,
-		CON_RED = 12,
-		CON_YLW = 14,
+    enum console_color {
+        CON_DEF = 7,
+        CON_GRY = 8,
+        CON_BLU = 9,
+        CON_GRN = 10,
+        CON_CYN = 11,
+        CON_RED = 12,
+        CON_MGN = 13,
+        CON_YLW = 14,
+        CON_WHT = 15,
 		CON_BLK = 112
 	};
+    class IWriter {
+    public:
+        virtual bool write(string_view s) = 0;
+    };
 	namespace impl {
+        extern IWriter* _customWriter;
 		void set_color(console_color clr);
 
 		template<typename ...Args>
-		void write(string_view fmt, Args&&... args) {
-			if constexpr (sizeof...(args) == 0)
-				fputs(fmt.data(), stdout);
-			else
-				fprintf(stdout, fmt.data(), fixfmtarg(args)...);
-		}
+        void write(string_view fmt, Args&&... args) {
+            if (!_customWriter) {
+                if constexpr (sizeof...(args) == 0)
+                    fputs(fmt.data(), stdout);
+                else
+                    fprintf(stdout, fmt.data(), fixfmtarg(args)...);
+            }
+            else {
+                if constexpr (sizeof...(args) == 0)
+                    _customWriter->write(fmt.data());
+                else {
+                    char* buf = nullptr;
+                    int cnt = snprintf(buf, 0, fmt.data(), fixfmtarg(args)...);
+                    buf = (char*)calloc(1, cnt + 1);
+                    assert(buf != nullptr);
+                    buf[cnt] = 0;
+                    if (cnt != snprintf(buf, cnt + 1, fmt.data(), fixfmtarg(args)...))
+                        assert(false);
+                    _customWriter->write(buf);
+                    free(buf); buf = nullptr;
+                }
+            }
+        }
 	}
+
+    static void set_writer(IWriter* wr) {
+        impl::_customWriter = wr;
+    }
 
 	static string inputline() {
 		string line;
