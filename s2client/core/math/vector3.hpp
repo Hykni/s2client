@@ -61,16 +61,17 @@ namespace core {
 			return (x * x + y * y + z * z);
 		}
 
-		string str()const {
-			if constexpr (std::is_same_v<T, float>) {
-				return core::format("(%.2f, %.2f, %.2f)", x, y, z);
-			}
-			else if constexpr (std::is_integral_v<T>) {
-				return core::format("(%d, %d, %d)", x, y, z);
-			}
-			else
-				static_assert(false);
-		}
+        string str()const {
+            if constexpr (std::is_same_v<T, float>) {
+                return core::format("(%.2f, %.2f, %.2f)", x, y, z);
+            }
+            else if constexpr (std::is_integral_v<T>) {
+                return core::format("(%d, %d, %d)", x, y, z);
+            }
+            else {
+                []<bool flag = false>() { static_assert(flag, "Unprintable vector3 type"); } ();
+            }
+        }
 	};
 	template<typename T>
 	vector3<T> operator*(T m, const vector3<T>& v) {

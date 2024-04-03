@@ -135,7 +135,7 @@ namespace core {
 			else if constexpr (std::is_same_v<t, mat4f>)
 				glUniformMatrix4fv(uniformloc(name), 1, GL_TRUE, &val._11);
 			else
-				static_assert(false, "Unknown uniform type");
+                []<bool flag = false>() { static_assert(flag, "Unknown uniform type"); } ();
 		}
 		template<typename T, typename t = std::remove_cvref_t<T>>
 		T get(string_view name) {
@@ -151,7 +151,7 @@ namespace core {
 			else if constexpr (std::is_same_v<t, mat4f>)
 				glGetUniformfv(mId, uniformloc(name), &out);
 			else
-				static_assert(false, "Unknown uniform type");
+                []<bool flag = false>() { static_assert(flag, "Unknown uniform type"); } ();
 			return out;
 		}
 	};
