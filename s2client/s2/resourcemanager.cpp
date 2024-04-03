@@ -14,9 +14,16 @@ namespace s2 {
 		}
 
 		tinyxml2::XMLDocument doc;
-		auto err = doc.Parse((const char*)mdfdata->data(), mdfdata->length());
+        std::string mdfxml((const char*)mdfdata->data(), mdfdata->length());
+        if (mdfxml.find("<model") != std::string::npos
+         && mdfxml.find("\"K2\" />") == std::string::npos
+         && mdfxml.find("</model") == std::string::npos) {
+            // hack for dodgy mdf files with no closing tags for model
+            mdfxml += "</model>";
+        }
+        auto err = doc.Parse(mdfxml.c_str());
 		if (err != tinyxml2::XML_SUCCESS) {
-			core::warning("Failed to parse mdf xml in %s\n", filename);
+			core::warning("Failed to parse mdf xml in %s.\n   Error: %s\n", filename, doc.ErrorStr());
 			return false;
 		}
 
@@ -39,7 +46,7 @@ namespace s2 {
 
 		auto mdldata = resources.file(mdlfile);
 		if (!mdldata) {
-			core::warning("Failed to load model file %s (mdf: %s)\n", mdlfile, filename);
+			core::warning("Missing model file %s (mdf: %s)\n", mdlfile, filename);
 			return false;
 		}
 
