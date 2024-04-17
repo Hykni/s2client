@@ -37,20 +37,22 @@ namespace s2 {
 	struct ServerSnapshotHdr {
 		uint32_t frameId;
 		uint32_t prevFrameId;
-		uint32_t timeEnd;
-		uint32_t timeStart;
+		uint32_t timestamp;
+		uint32_t lastReceivedClientTimestamp;
+        uint8_t  stateStringSequence;
 		vector<GameEvent> events;
 	};
 
 	struct GameInfo {
 	};
 	struct TeamInfo {
-		uint16_t baseBuildingIndex;
+        uint16_t baseBuildingIndex = 0;
 	};
 	struct ClientInfo {
-		int clientNumber;
-		uint16_t playerEntityIndex;
-		uint16_t ping;
+        string name = "";
+        int clientNumber = 0;
+		uint16_t playerEntityIndex = 0;
+		uint16_t ping = 0;
 	};
 	class game {
 		std::shared_ptr<world> mWorld;
@@ -61,6 +63,7 @@ namespace s2 {
 		int mLocalClientNumber = -1;
 		map<int, ClientInfo> mClients;
 		entity* mLocalEnt = nullptr;
+        uint8_t mStateStringSequence = 0;
 
 		void updategame(entity& e);
 		void updateteam(entity& e);
@@ -71,7 +74,7 @@ namespace s2 {
 		std::shared_ptr<world> currentworld();
 		void resetworld();
 		bool loadworld(string_view worldname, string_view worldchecksum);
-		bool readentupdate(packet& pkt);
+		bool readentupdate(packet& pkt, int client=-1);
 		
 		void setclientnumber(int clientNumber);
 		const map<int, entity>& entities()const;
@@ -79,10 +82,11 @@ namespace s2 {
 		entity* getent(int id);
 		const entity* getent(int id)const;
 		entity* localent();
-		const GameInfo* gameinfo()const;
-		const ClientInfo* clientinfo()const;
-		const TeamInfo* teaminfo(int teamid)const;
+		const GameInfo gameinfo()const;
+        const ClientInfo clientinfo()const;
+        const std::optional<ClientInfo> clientinfo(int clientNum)const;
+		const TeamInfo teaminfo(int teamid)const;
 
-		ServerSnapshotHdr rcvserversnapshot(packet& pkt, size_t length);
+		ServerSnapshotHdr rcvserversnapshot(packet& pkt, size_t length, uint8_t stateSeq, int client=-1);
 	};
 }

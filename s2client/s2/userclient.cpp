@@ -24,6 +24,7 @@ namespace s2 {
 		mState = Disconnected;
 		mConnected = false;
 		mLocalClientNumber = -1;
+        m_yStateStringSequence = 0;
 		resetworld();
 	}
 	void userclient::resetworld() {
@@ -86,6 +87,8 @@ namespace s2 {
 
 	bool userclient::connect(string_view ip, int port, string_view password) {
 		reset();
+        mHostname = ip;
+        mPort = port;
 		mNet = std::make_unique<netclient>(ip.data(), port);
 
 		packet pkt;
@@ -139,9 +142,7 @@ namespace s2 {
 		if (mIngame) {
 			auto mselapsed = MsDuration(now - mLastClientSnapshot).count();
 			auto cli = clientinfo();
-			int ping = 50;
-			if (cli)
-				ping = cli->ping;
+			int ping = cli.ping;
 			if (mselapsed >= (1000 / mPacketSendFps)) {
 				sendclientsnapshot(ping);
 			}
@@ -162,7 +163,7 @@ namespace s2 {
         } break;
 		case Spectating:
 		{
-			if (ingame() && clientinfo()) {
+			if (ingame() && clientinfo().ping) {
 				teamrequest(2);
 				teamrequest(1);
 				mState = Spawning;
@@ -172,9 +173,7 @@ namespace s2 {
 		case Spawning:
 		{
 			auto info = clientinfo();
-			if (!info)
-				core::error("?????????");
-			auto local = getent(mGame.clientinfo()->playerEntityIndex);
+			auto local = getent(mGame.clientinfo().playerEntityIndex);
 			if (!local || local->dormant()) {
 				if (local && local->m_iTeam == 1)
 					unitrequest(705);
@@ -188,9 +187,9 @@ namespace s2 {
 				}
 				else {
 					auto team = teaminfo(local->m_iTeam);
-					if (team) {
+					if (team.baseBuildingIndex) {
 						preparespawn();
-						spawnrequest(team->baseBuildingIndex);
+						spawnrequest(team.baseBuildingIndex);
 					}
 				}
 			}
@@ -202,7 +201,7 @@ namespace s2 {
 				pingminimap(plyr->m_v3Position.x, plyr->m_v3Position.y);
 			}*/
 
-			auto local = getent(mGame.clientinfo()->playerEntityIndex);
+			auto local = getent(mGame.clientinfo().playerEntityIndex);
 			if (local) {
 				if (local->dormant()) {
 					mState = Spectating;
@@ -266,25 +265,25 @@ namespace s2 {
 		return mGame.getent(id);
 	}
 
-	const ClientInfo* userclient::clientinfo()const {
+	const ClientInfo userclient::clientinfo()const {
 		if (!connected())
-			return nullptr;
+            return {};
 		return mGame.clientinfo();
 	}
 
-	const GameInfo* userclient::gameinfo()const {
+	const GameInfo userclient::gameinfo()const {
 		if (!connected())
-			return nullptr;
+            return {};
 		return mGame.gameinfo();
 	}
-	const TeamInfo* userclient::teaminfo(int id)const {
+	const TeamInfo userclient::teaminfo(int id)const {
 		return mGame.teaminfo(id);
 	}
 
 	void userclient::movetowards(const vector3f& target) {
 		if (!ingame())
 			return;
-		auto local = mGame.getent(mGame.clientinfo()->playerEntityIndex);
+		auto local = mGame.getent(mGame.clientinfo().playerEntityIndex);
 		if (local) {
 			auto pos = local->m_v3Position;
 			auto delta = target - pos;
@@ -297,7 +296,7 @@ namespace s2 {
 	void userclient::pathtowards(const vector3f& target, float targetSize) {
 		if (!ingame())
 			return;
-		auto local = getent(mGame.clientinfo()->playerEntityIndex);
+		auto local = getent(mGame.clientinfo().playerEntityIndex);
 		if (local) {
 			auto pos = local->m_v3Position;
 			mWaypoints = mGame.currentworld()->pathfind(pos, target, [=](const vector3f& from, const vector3f& to) -> bool {
@@ -486,7 +485,7 @@ namespace s2 {
             mState = Spectating;
         }
 		mRecvdSnapshots++;
-		auto hdr = mGame.rcvserversnapshot(pkt, length);
+		auto hdr = mGame.rcvserversnapshot(pkt, length, m_yStateStringSequence, mLocalClientNumber);
 		mCurrentFrame = hdr.frameId;
 		return true;
 	}
@@ -526,6 +525,7 @@ namespace s2 {
 		case ServerCmd::StateReset:
 		{
 			core::info("Clearing server state strings.\n");
+            m_yStateStringSequence = 0;
 			mSvState.clear();
 		} break;
 		case ServerCmd::StateUpdate:
@@ -534,6 +534,8 @@ namespace s2 {
 			uint32_t statelen = pkt.readdword();
 			updatestatestrings(stateid, (const char*)pkt.nextdata(), statelen);
 			pkt.advance(statelen);
+            m_yStateStringSequence++;
+            core::info("m_yStateStringSequence %d\n", m_yStateStringSequence);
 		} break;
 		case ServerCmd::CompressedStateUpdate:
 		{
@@ -551,6 +553,8 @@ namespace s2 {
 			}
 			else
 				core::error("Compressed state string update failed.\n");
+            m_yStateStringSequence++;
+            core::info("m_yStateStringSequence %d\n", m_yStateStringSequence);
 		} break;
 		case ServerCmd::StateFragment:
 		{
@@ -568,6 +572,8 @@ namespace s2 {
 			pkt.advance(statelen);
 			updatestatestrings(stateid, mStateFragments[stateid].data(), mStateFragments[stateid].length());
 			mStateFragments.erase(stateid);
+            m_yStateStringSequence++;
+            core::info("m_yStateStringSequence %d\n", m_yStateStringSequence);
 		} break;
 		case ServerCmd::CompressedStateTerminate:
 		{
@@ -589,6 +595,8 @@ namespace s2 {
 			else
 				core::warning("Compressed state string update failed.\n");
 			mStateFragments.erase(stateid);
+            m_yStateStringSequence++;
+            core::info("m_yStateStringSequence %d\n", m_yStateStringSequence);
 		} break;
 		case ServerCmd::StateStringsEnd:
 		{
@@ -877,6 +885,11 @@ namespace s2 {
 				auto value = pkt.readstring();
 				core::info("\t\"%s\" = \"%s\"\n", key, value);
 			}
+            if (script == "playerreconnect") {
+                core::info("Reconnecting...\n");
+                disconnect("reconnecting...");
+                connect(mHostname, mPort);
+            }
 		} break;
 		default:
 			core::warning("Unknown gamedata id = %Xh\n", id);

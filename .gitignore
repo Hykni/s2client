@@ -4,3 +4,4 @@ s2client/maps/
 s2client/Debug/
 x64/
 build/
+.vs/

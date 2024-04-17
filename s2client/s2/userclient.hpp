@@ -31,6 +31,8 @@ namespace s2 {
 	class userclient {
 	private:
 		std::unique_ptr<netclient> mNet;
+        std::string mHostname;
+        int mPort;
 		uint32_t mAccountId;
 		uint32_t mLastServerTimestamp = ~0;
 		std::chrono::steady_clock::time_point mLastServerFrameTimestamp;
@@ -40,6 +42,7 @@ namespace s2 {
 		uint32_t mLocalClientNumber = -1;
 		uint64_t mSentSnapshots = 0;
 		uint64_t mRecvdSnapshots = 0;
+        uint8_t m_yStateStringSequence = 0;
 		int mGameInfoEntNumber = -1;
 		long mServerFps = 20;
 		long mPacketSendFps = 30;
@@ -113,9 +116,9 @@ namespace s2 {
 
 		entity* localent();
 		const entity* getent(int id)const;
-		const ClientInfo* clientinfo()const;
-		const GameInfo* gameinfo()const;
-		const TeamInfo* teaminfo(int id)const;
+		const ClientInfo clientinfo()const;
+		const GameInfo gameinfo()const;
+		const TeamInfo teaminfo(int id)const;
 		void movetowards(const vector3f& target);
 		void pathtowards(const vector3f& target, float targetSize=25.f);
 		bool haspath()const;

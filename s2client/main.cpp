@@ -22,6 +22,7 @@
 #include <core/math/geom.hpp>
 #include <core/io/zipfile.hpp>
 #include <s2/model.hpp>
+#include <s2/iowriter.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <ext/stb/stb_image.h>
@@ -40,6 +41,7 @@ void UIThread(s2::userclient* client) {
         core::gltex2d heightmaptex(wnd.width(), wnd.height(), GL_RGBA);
         mat4f worldToScreen = mat4f::identity();
         vector3f camScale(1.f, 1.f, 1.f);
+        vector<vector3f> navmeshLines;
         while (client->connected()) {
             gfx.clear(Color::White);
             if (client->ingame()) {
@@ -98,6 +100,7 @@ void UIThread(s2::userclient* client) {
                             }
                         }
                     }
+                    navmeshLines = world->navmeshlines();
                     heightmaptex.generate(GL_RGBA, GL_FLOAT, pixelData);
                     delete[] pixelData;
                     core::info("Finished generating world!\n");
@@ -116,9 +119,10 @@ void UIThread(s2::userclient* client) {
 
             auto clientinfo = client->clientinfo();
             auto local = client->localent();
-            if (client->ingame() && clientinfo && local) {
-                auto title = core::format("cid %d; health %.2f; team %d; status %d; recvd %d; sent %d;",
-                    clientinfo->clientNumber, local->m_fHealth, local->m_iTeam, local->m_yStatus,
+            if (client->ingame() && clientinfo.ping && local) {
+                auto title = core::format("map \"%s\"; cid %d; health %.2f; team %d; status %d; recvd %d; sent %d;",
+                    client->currentworld() ? client->currentworld()->name() : "none",
+                    clientinfo.clientNumber, local->m_fHealth, local->m_iTeam, local->m_yStatus,
                     client->recvdsnapshots(), client->sentsnapshots());
                 SetConsoleTitleA(title.c_str());
 
@@ -126,12 +130,20 @@ void UIThread(s2::userclient* client) {
                 if (GetAsyncKeyState('N') & 1)
                     drawnavmesh = !drawnavmesh;
                 if (drawnavmesh) {
-                    auto lines = client->currentworld()->navmeshlines();
-                    if (!lines.empty()) {
-                        for (size_t i = 0; i < lines.size(); i++) {
-                            lines[i] = worldToScreen * lines[i];
+                    if (!navmeshLines.empty()) {
+                        vector<vector3f> visibleLines;
+                        for (size_t i = 0; i < navmeshLines.size(); i += 2) {
+                            auto lp1 = worldToScreen * navmeshLines[i];
+                            auto lp2 = worldToScreen * navmeshLines[i + 1];
+                            if ((lp1.x < 0 && lp2.x < 0)
+                                || (lp1.x > wnd.width() && lp2.x > wnd.width())
+                                || (lp2.y < 0 && lp2.y < 0)
+                                || (lp2.y > wnd.height() && lp2.y > wnd.height()))
+                                continue;
+                            visibleLines.push_back(lp1);
+                            visibleLines.push_back(lp2);
                         }
-                        gfx.lines(Color::Black, lines.data(), lines.size() / 2);
+                        gfx.lines(Color::Black, visibleLines.data(), (int)visibleLines.size() / 2);
                     }
                 }
                 
@@ -339,6 +351,7 @@ int main(int argc, char** argv) {
     core::info("Hello :o\n");
     network::init();
     auto masterserver = s2::masterserver();
+    s2::iowriter::Attach();
 
     // geometry tests
     if (false) {

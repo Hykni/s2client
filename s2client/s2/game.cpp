@@ -22,6 +22,7 @@ namespace s2 {
 	}
 	void game::updateclient(entity& e) {
 		ClientInfo ci;
+        ci.name = e.m_sName;
 		ci.clientNumber = e.m_iClientNumber;
 		ci.playerEntityIndex = e.m_uiPlayerEntityIndex;
 		ci.ping = e.m_unPing;
@@ -56,7 +57,7 @@ namespace s2 {
 		resetworld();
 		return mWorld != nullptr;
 	}
-	bool game::readentupdate(packet& pkt) {
+	bool game::readentupdate(packet& pkt, int client) {
 		uint16_t head = pkt.readword();
 		bool entFromBaseline = head & 1;
 		auto entid = head >> 1;
@@ -66,6 +67,9 @@ namespace s2 {
 			//if (entType)
 			//	pkt.readdword(); //?
 			if (entType) {
+                if (client == -1)
+                    client = pkt.readdword();
+                
 				if (!typeregistry::HasType(entType)) {
 					core::warning("Unknown entity type %Xh in snapshot\n", entType);
 					pkt.advance(pkt.remaining());
@@ -217,29 +221,36 @@ namespace s2 {
 	}
 	entity* game::localent() {
 		auto ci = clientinfo();
-		if (!ci)
+		if (!ci.playerEntityIndex)
 			return nullptr;
 		else
-			return getent(ci->playerEntityIndex);
+			return getent(ci.playerEntityIndex);
 	}
-	const GameInfo* game::gameinfo() const {
-		return &mGameInfo;
+	const GameInfo game::gameinfo() const {
+		return mGameInfo;
 	}
-	const ClientInfo* game::clientinfo()const {
+    const ClientInfo game::clientinfo()const {
 		auto it = mClients.find(mLocalClientNumber);
 		if (it != mClients.end())
-			return &it->second;
+            return it->second;
 		else
 			return {};
 	}
-	const TeamInfo* game::teaminfo(int teamid) const {
+    const std::optional<ClientInfo> game::clientinfo(int clientNum)const {
+        auto it = mClients.find(clientNum);
+        if (it != mClients.end())
+            return it->second;
+        else
+            return {};
+    }
+	const TeamInfo game::teaminfo(int teamid) const {
 		auto it = mTeams.find(teamid);
 		if (it != mTeams.end())
-			return &it->second;
+			return it->second;
 		else
 			return {};
 	}
-	ServerSnapshotHdr game::rcvserversnapshot(packet& pkt, size_t length) {
+	ServerSnapshotHdr game::rcvserversnapshot(packet& pkt, size_t length, uint8_t stateSeq, int client) {
 		ServerSnapshotHdr hdr;
 
 		if (length == 0)
@@ -247,10 +258,14 @@ namespace s2 {
 		size_t p0 = pkt.tell();
 		hdr.frameId = pkt.readdword();
 		hdr.prevFrameId = pkt.readdword();
-		hdr.timeEnd = pkt.readdword();
-		hdr.timeStart = pkt.readdword();
+		hdr.timestamp = pkt.readdword();
+		hdr.lastReceivedClientTimestamp = pkt.readdword();
 
-		pkt.readbyte();
+		hdr.stateStringSequence = pkt.readbyte();
+        if (hdr.stateStringSequence != stateSeq) {
+            core::info("Dropping desync'd snapshot.. (S:%X != C:%X)\n", hdr.stateStringSequence, stateSeq);
+            return hdr;
+        }
 		uint8_t numGameEvents = pkt.readbyte();
 		if (numGameEvents != 0) {
 			core::print("numGameEvents #%d\n", numGameEvents);
@@ -313,7 +328,7 @@ namespace s2 {
 		}
 
 		while ((pkt.tell() - p0) < length) {
-			readentupdate(pkt);
+			readentupdate(pkt, client);
 		}
 
 		return hdr;
