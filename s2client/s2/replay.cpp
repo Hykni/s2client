@@ -1,4 +1,7 @@
 #include <s2/replay.hpp>
+#include <s2/netids.hpp>
+#include <network/packet.hpp>
+#include <s2/game.hpp>
 #include <core/io/logger.hpp>
 #include <core/io/bytestream.hpp>
 #include <ext/miniz/miniz.h>
@@ -8,6 +11,8 @@ namespace s2 {
 	}
 
 	std::shared_ptr<replay> replay::LoadFromFile(string_view filename) {
+        game tmpGame;
+
 		mz_zip_archive archive;
 		memset(&archive, 0, sizeof(archive));
 		if (mz_zip_reader_init_file(&archive, filename.data(), 0)) {
@@ -65,30 +70,142 @@ namespace s2 {
 			int snapshotCount = 0;
 			while (!fs.eof()) {
 				uint32_t snaplen = fs.readDword();
-				fs.advance(snaplen);
+                auto endSnap = fs.tell() + snaplen;
+
+                network::packet pkt;
+                uint8_t* snapData = fs.data() + fs.tell();
+
+                pkt.write(snapData, snaplen);
+                pkt.seek(0);
+                tmpGame.rcvserversnapshot(pkt, pkt.length(), 0);
+
+                auto frameNo = fs.readDword();
+                auto prevFrameNo = fs.readDword();
+                auto timestamp = fs.readDword();
+                auto lastClientTime = fs.readDword();
+                auto stateStringSeq = fs.readByte();
+                auto numEvents = fs.readByte();
+
+                //core::info("  [%08d] Frame %d -> %d: seq %X; %d events\n", timestamp, prevFrameNo, frameNo, stateStringSeq, numEvents);
+
+                /* Snapshot
+                	// Read basic frame data
+		            buffer >> m_uiFrameNumber
+			            >> m_uiPrevFrameNumber
+			            >> m_uiTimeStamp
+			            >> m_uiLastReceivedClientTime
+			            >> m_yStateStringSequence
+			            >> m_yNumEvents;
+
+
+                	// Store the rest of the packet for the game to interpret
+		            if (buffer.GetLength() > 18)
+			            m_bufferReceived.Write(buffer.Get(buffer.GetReadPos()), buffer.GetUnreadLength());
+		            else
+			            m_bufferReceived.Clear();
+                */
+
+
+				fs.seek(endSnap);
 				snapshotCount++;
-				auto count = fs.readDword();
+
+                // read reliable game data
+				auto count = fs.readDword(); // num clients
 				for (; count; count--) {
-					int t = fs.readInt();
+					int t = fs.readInt(); // index
 					int i = fs.readInt();
-					for (; i; i--)
-						fs.readByte();
+
+                    core::bytestream reliableGameData(fs.data() + fs.tell(), i);
+                    if (t == 1) {
+                        auto id = reliableGameData.readByte();
+                        switch (id) {
+                        case Gamedata::ChatAll:
+                        {
+                            auto cid = reliableGameData.readDword();
+                            auto msg = reliableGameData.readString();
+                            auto client = tmpGame.clientinfo(cid);
+                            core::print<core::CON_BLU>("[ALL] ");
+                            core::print("%s: %s\n", client ? client->name : "UNKNOWN", msg);
+                        } break;
+                        case Gamedata::ChatTeam:
+                        {
+                            auto cid = reliableGameData.readDword();
+                            auto msg = reliableGameData.readString();
+                            auto client = tmpGame.clientinfo(cid);
+                            core::print<core::CON_YLW>("[TEAM] ");
+                            core::print("%s: %s\n", client ? client->name : "UNKNOWN", msg);
+                        } break;
+                        case Gamedata::ChatSquad:
+                        {
+                            auto cid = reliableGameData.readDword();
+                            auto msg = reliableGameData.readString();
+                            auto client = tmpGame.clientinfo(cid);
+                            core::print<core::CON_CYN>("[SQUAD] ");
+                            core::print("%s: %s\n", client ? client->name : "UNKNOWN", msg);
+                        } break;
+                        case Gamedata::ServerMessage:
+                        {
+                            auto msg = reliableGameData.readString();
+                            core::print<core::CON_CYN>("[SERVER] Server message: ");
+                            core::print("%s\n", msg);
+                        } break;
+                        case Gamedata::Message:
+                        {
+                            auto msg = reliableGameData.readString();
+                            core::info("%s\n", msg);
+                        } break;
+                        case Gamedata::Death:
+                        {
+                            //core::info("someone died lol\n");
+                            uint32_t idkiller = reliableGameData.readDword();
+                            uint32_t idkilled = reliableGameData.readDword();
+                            uint16_t idweapon = reliableGameData.readWord();
+                            auto killedent = tmpGame.getent(idkilled);
+                            if (killedent) {
+                                killedent->killed = true;
+                                auto killerent = tmpGame.getent(idkiller);
+                                auto killer = killerent->typname();
+                                auto killed = killedent->typname();
+                                ClientInfo killedClient, killerClient;
+                                if (killedent->m_iClientNum && tmpGame.clientinfo(killedent->m_iClientNum)) {
+                                    killedClient = tmpGame.clientinfo(killedent->m_iClientNum).value();
+                                }
+                                if (killerent->m_iClientNum && tmpGame.clientinfo(killerent->m_iClientNum)) {
+                                    killerClient = tmpGame.clientinfo(killerent->m_iClientNum).value();
+                                }
+                                core::info("%s(%s) was killed by %s(%s)\n",
+                                    killedClient.name, killedent->typname(),
+                                    killerClient.name, killerent->typname());
 				}
-				auto count2 = fs.readDword();
+                            //core::info("Received death packet id (killer:%d) (killed:%d) (weapon:%d).\n", idkiller, idkilled, idweapon);
+                        } break;
+                        }
+                    }
+                    fs.advance(i);
+                    //for (; i; i--)
+					//	fs.readByte();
+				}
+
+                // read game data
+				auto count2 = fs.readDword(); // num clients
 				for (; count2; count2--) {
-					int t = fs.readInt();
+					int t = fs.readInt(); // index
 					int i = fs.readInt();
 					for (; i; i--)
 						fs.readByte();
 				}
-				auto count3 = fs.readDword();
+
+                // read state strings
+				auto count3 = fs.readDword(); // num state strings
 				for (; count3; count3--) {
-					int t = fs.readInt();
+					int t = fs.readInt(); // id
 					fs.readWString();
 				}
 				if(count != 0 || count2 != 0 || count3 != 0)
 					core::info("Snapshot length %Xh; counts %d,%d,%d\n", snaplen, count, count2, count3);
 			}
+            if (fs.tell() > fs.length())
+                core::error("hmmm %d > %d\n", fs.tell(), fs.length());
 			core::info("Finished processing %d snapshots from replay\n", snapshotCount);
 
 			free(replaydata);
