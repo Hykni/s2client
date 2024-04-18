@@ -158,8 +158,7 @@ namespace s2 {
                     surf.triangles.push_back(ptsoffs + stream.readDword());
                     surf.triangles.push_back(ptsoffs + stream.readDword());
                 }
-                surf.bounds.min = bminf;
-                surf.bounds.max = bmaxf;
+                surf.bounds.insert(surf.bounds.end(), { bminf, bmaxf });
                 surf.flags = flags;
                 if (verboseLoad) {
                     core::info("   bminf %s\n", bminf.str());

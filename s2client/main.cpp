@@ -137,8 +137,8 @@ void UIThread(s2::userclient* client) {
                             auto lp2 = worldToScreen * navmeshLines[i + 1];
                             if ((lp1.x < 0 && lp2.x < 0)
                                 || (lp1.x > wnd.width() && lp2.x > wnd.width())
-                                || (lp2.y < 0 && lp2.y < 0)
-                                || (lp2.y > wnd.height() && lp2.y > wnd.height()))
+                                || (lp1.y < 0 && lp2.y < 0)
+                                || (lp1.y > wnd.height() && lp2.y > wnd.height()))
                                 continue;
                             visibleLines.push_back(lp1);
                             visibleLines.push_back(lp2);
@@ -244,8 +244,7 @@ void DisplayModel(core::glrenderer& gfx, core::window& wnd, std::shared_ptr<s2::
     vector<vector3f> vrts;
     vector<vector3f> bounds;
     if (!surf.triangles.empty()) {
-        bounds.push_back(surf.bounds.min);
-        bounds.push_back(surf.bounds.max);
+        bounds = surf.bounds;
     }
     for (uint32_t i = 0; i < (surf.triangles.size() / 3); i++) {
         vrts.push_back(surf.points[surf.triangles[3 * i + 0]]);
@@ -267,7 +266,7 @@ void DisplayModel(core::glrenderer& gfx, core::window& wnd, std::shared_ptr<s2::
         }
     }
     auto start_time = std::chrono::high_resolution_clock::now();
-    vector3f center = (surf.bounds.max - surf.bounds.min) * 0.5f + surf.bounds.min;
+    vector3f center = vector3f();// (surf.bounds.max - surf.bounds.min) * 0.5f + surf.bounds.min;
     wnd.show();
     do {
         static auto prev_time = start_time;
@@ -284,23 +283,24 @@ void DisplayModel(core::glrenderer& gfx, core::window& wnd, std::shared_ptr<s2::
         else if (GetAsyncKeyState('Z') & 0x8000)
             campos.z -= 200.f * frametime;
         if (GetAsyncKeyState(VK_UP) & 0x8000)
-            campos -= campos.unit() * 200.f * frametime;
+            campos -= vector3f(campos.x,campos.y,0).unit() * 200.f * frametime;
         else if (GetAsyncKeyState(VK_DOWN) & 0x8000)
-            campos += campos.unit() * 200.f * frametime;
+            campos += vector3f(campos.x, campos.y, 0).unit() * 200.f * frametime;
         gfx.clear(Color::White);
         gfx.perspective();
-        gfx.lookat(center + vector3f(campos.x * cosf(ang), campos.y * sinf(ang), campos.z), center, vector3f(0.f, 0.f, 1.f));
+        gfx.lookat(center + vector3f(campos.x * cosf(ang), campos.y * sinf(ang), campos.z), center + vector3f(0,0,campos.z), vector3f(0.f, 0.f, 1.f));
 
-        gfx.triangles(Color::Blue, vrts.data() + surf_numverts, int(vrts.size() - surf_numverts) / 3);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        gfx.triangles(Color::Forestgreen, vrts.data(), surf_numverts / 3);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        gfx.triangles(Color::Blue, vrts.data() + surf_numverts, int(vrts.size() - surf_numverts) / 3);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); 
+        if (render_surf)
+            gfx.triangles(Color::Forestgreen, vrts.data(), surf_numverts / 3);
         //if(render_surf)
         //  gfx.triangles(Color::Forestgreen, vrts.data(), surf_numverts / 3);
         //else
         //  gfx.triangles(Color::Blue, vrts.data() + surf_numverts, (vrts.size() - surf_numverts) / 3);
 
-        /*for (uint32_t i = 0; i < bounds.size(); i += 2) {
+        for (uint32_t i = 0; i < bounds.size(); i += 2) {
             auto& min = bounds[i];
             auto& max = bounds[i + 1];
             vector3f pts[] = {
@@ -332,14 +332,17 @@ void DisplayModel(core::glrenderer& gfx, core::window& wnd, std::shared_ptr<s2::
                 pts[3], pts[7]
             };
             auto clr = Color::Red;
-            if (!surf.triangles.empty() && i == 0)
+            if (!surf.triangles.empty() && i < surf.bounds.size()) {
+                if (!render_surf)
+                    continue;
                 clr = Color::Violet;
+            }
             for (int i = 0; i < (sizeof(lines) / sizeof(lines[0])); i += 2)
                 gfx.line(clr, lines[i], lines[i + 1]);
-        }*/
-        gfx.line(Color::Magenta, vector3f(0, 0, 0), vector3f(0.f, 0.f, 10.f));
-        gfx.line(Color::Yellow, vector3f(0, 0, 0), vector3f(0.f, 10.f, 0.f));
-        gfx.line(Color::Cyan, vector3f(0, 0, 0), vector3f(10.f, 0.f, 0.f));
+        }
+        gfx.line(Color::Magenta, vector3f(0, 0, 0), vector3f(0.f, 0.f, 50.f));
+        gfx.line(Color::Yellow, vector3f(0, 0, 0), vector3f(0.f, 50.f, 0.f));
+        gfx.line(Color::Cyan, vector3f(0, 0, 0), vector3f(50.f, 0.f, 0.f));
 
         gfx.flush();
         wnd.pump();
@@ -482,6 +485,7 @@ int main(int argc, char** argv) {
     if (!resources)
         core::error("Couldn't find resources0.s2z");
     s2::gResourceManager->LoadResources(*resources);
+    // model viewer
     if (false && resources) {
         core::window wnd(640, 480);
         if (!wnd.create())
@@ -494,8 +498,8 @@ int main(int argc, char** argv) {
         gfx.perspective();
         gfx.lookat(vector3f(200.f, 5.f, 200.f), vector3f(0.f,0.f,0.f), vector3f(0.f, 0.f, 1.f));
 
-        //auto mdldata = resources->file("world/props/village/stone_tower.model");
-        auto mdldata = resources->file("world/props/tools/blocker_med.model");
+        auto mdldata = resources->file("world/props/village/stone_tower.model");
+        //auto mdldata = resources->file("world/props/tools/blocker_med.model");
         if (mdldata) {
             core::info("Got model stream.\n");
 
@@ -706,6 +710,11 @@ int main(int argc, char** argv) {
 
     s2::ms_server_info selected;
     auto servers = masterserver.getserverlist();
+    while (servers.empty()) {
+        core::warning("Failed to get server list. Retrying in 1s...\n");
+        Sleep(1000);
+        servers = masterserver.getserverlist();
+    }
     for (size_t i = 0; i < servers.size(); i++) {
         auto& server = servers[i];
         core::print("[#%d] %s:%d   \t(%d/%d) ", i, server.ip, server.port, server.numplayers, server.maxplayers);

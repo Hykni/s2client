@@ -263,8 +263,8 @@ namespace s2 {
 
 		hdr.stateStringSequence = pkt.readbyte();
         if (hdr.stateStringSequence != stateSeq) {
-            core::info("Dropping desync'd snapshot.. (S:%X != C:%X)\n", hdr.stateStringSequence, stateSeq);
-            return hdr;
+            core::info("Desync'd snapshot.. (S:%X != C:%X)\n", hdr.stateStringSequence, stateSeq);
+            //return hdr;
         }
 		uint8_t numGameEvents = pkt.readbyte();
 		if (numGameEvents != 0) {

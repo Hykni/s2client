@@ -56,9 +56,7 @@ namespace s2 {
 
 	class surface {
 	public:
-		struct {
-			vector3f min, max;
-		} bounds;
+        vector<vector3f> bounds;
 		uint32_t flags;
 		vector<plane> planes;
 		vector<vector3f> points;
