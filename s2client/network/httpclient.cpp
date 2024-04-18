@@ -36,7 +36,7 @@ namespace network {
 	string httpclient::query(string_view path, string_view method, string_view data)
 	{
 		std::stringstream request;
-		request << method << " " << path << " HTTP/1.1\r\n";
+		request << method << " " << path << " HTTP/1.0\r\n"; // send HTTP/1.0 to avoid some 1.1 features like chunked encoding
 		request << "Host: " << mHost << "\r\n";
 		request << "User-Agent: " << mHeaders["User-Agent"] << "\r\n";
 		if (data.size() > 0) {
